@@ -1,12 +1,14 @@
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import InputCustom from "../../components/Input/InputCustom";
 import { useDispatch, useSelector } from "react-redux";
 import { add_SV, update_SV } from "../../redux/slice/sinhVienSlice";
+import { AlertContext } from "../../App";
 
 const Form = () => {
-  const { info_SV } = useSelector((state) => state.sinhVien);
+  const { handleAlert } = useContext(AlertContext);
+  const { info_SV, list_SV } = useSelector((state) => state.sinhVien);
   const dispatch = useDispatch();
   const {
     handleChange,
@@ -28,8 +30,14 @@ const Form = () => {
     },
     onSubmit: (values, { resetForm }) => {
       console.log(values);
+      const existingStudent = list_SV.find((sv) => sv.maSV === values.maSV);
+      if (existingStudent) {
+        handleAlert("error", "Mã sinh viên đã tồn tại");
+        return;
+      }
       dispatch(add_SV(values));
-
+      handleAlert("success", "Thêm hành công");
+      handleUpdate(values);
       resetForm();
     },
     validationSchema: Yup.object({
@@ -54,6 +62,10 @@ const Form = () => {
   useEffect(() => {
     setValues(info_SV);
   }, [info_SV, setValues]);
+  const handleUpdate = (values) => {
+    dispatch(update_SV(values));
+    handleAlert("success", "Chỉnh sửa thành công");
+  };
   return (
     <div className="pt-5">
       <form onSubmit={handleSubmit}>
@@ -104,6 +116,9 @@ const Form = () => {
             <button
               className="bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-5 rounded mt-4"
               type="button"
+              onClick={() => {
+                handleUpdate(values);
+              }}
             >
               Cập nhật
             </button>
